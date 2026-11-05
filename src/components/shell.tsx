@@ -1,61 +1,48 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { cookies } from "next/headers";
 import { getT } from "@/lib/i18n";
-import { signOut } from "@/app/actions/auth";
-import { LocaleSwitcher } from "./locale-switcher";
-import { NavLink } from "./nav-link";
+import { getUser } from "@/lib/session";
+import { createClient } from "@/lib/supabase/server";
+import { AppShell, type NavItem, type NotificationItem } from "./app-shell";
 
-export type NavItem = { href: string; label: string; section?: string };
+export type { NavItem };
 
-export async function Shell({ brand, subtitle, nav, children, userEmail, banner }: {
-  brand: string; subtitle?: ReactNode; nav: NavItem[]; children: ReactNode; userEmail: string; banner?: ReactNode;
+/** Server wrapper: loads the per-user chrome data (notifications, sidebar state) and renders the client shell. */
+export async function Shell({ brand, subtitle, homeHref, nav, children, role, banner, searchHref, settingsHref, billingHref, tenantId }: {
+  brand: string; subtitle?: string; homeHref: string; nav: NavItem[]; children: ReactNode; role: string; banner?: ReactNode;
+  searchHref?: string; settingsHref?: string; billingHref?: string; tenantId?: string;
 }) {
   const { t, locale } = await getT();
-  const sections = Array.from(new Set(nav.map((n) => n.section ?? "")));
-  const navEl = (
-    <nav className="space-y-4">
-      {sections.map((s) => (
-        <div key={s}>
-          {s && <div className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{s}</div>}
-          <ul className="space-y-0.5">
-            {nav.filter((n) => (n.section ?? "") === s).map((n) => (
-              <li key={n.href}><NavLink href={n.href}>{n.label}</NavLink></li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </nav>
-  );
+  const user = await getUser();
+  const supabase = await createClient();
+  let q = supabase.from("notifications").select("id, title, body, link, created_at, read_at").eq("user_id", user?.id ?? "").order("created_at", { ascending: false }).limit(8);
+  if (tenantId) q = q.eq("tenant_id", tenantId);
+  const { data } = await q;
+  // Only same-origin links are rendered as navigation targets.
+  const notifications = ((data ?? []) as NotificationItem[]).map((n) => ({ ...n, link: n.link && n.link.startsWith("/") && !n.link.startsWith("//") ? n.link : null }));
+  const collapsed = (await cookies()).get("sidebar")?.value === "collapsed";
+
   return (
-    <div className="min-h-screen lg:flex">
-      <aside className="no-print hidden w-64 shrink-0 border-e border-slate-200 bg-white lg:block">
-        <div className="sticky top-0 flex h-screen flex-col">
-          <div className="border-b border-slate-100 px-5 py-4">
-            <Link href="/" className="text-lg font-bold text-brand-700">{t.app.name}</Link>
-            <div className="truncate text-xs text-slate-500">{brand}</div>
-          </div>
-          <div className="flex-1 overflow-y-auto px-2 py-4">{navEl}</div>
-        </div>
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="no-print sticky top-0 z-10 flex items-center gap-3 border-b border-slate-200 bg-white/90 px-4 py-2.5 backdrop-blur">
-          <details className="relative lg:hidden">
-            <summary className="cursor-pointer list-none rounded-lg px-2 py-1 text-xl leading-none ring-1 ring-slate-200" aria-label="Menu">☰</summary>
-            <div className="absolute start-0 top-10 z-20 max-h-[80vh] w-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">{navEl}</div>
-          </details>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-medium text-slate-800 lg:hidden">{brand}</div>
-            {subtitle && <div className="truncate text-xs text-slate-500">{subtitle}</div>}
-          </div>
-          <LocaleSwitcher locale={locale} />
-          <span className="hidden max-w-[14rem] truncate text-xs text-slate-500 sm:inline" dir="ltr">{userEmail}</span>
-          <form action={signOut}>
-            <button className="rounded-lg px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50">{t.common.logout}</button>
-          </form>
-        </header>
-        {banner}
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 lg:px-8">{children}</main>
-      </div>
-    </div>
+    <AppShell
+      brand={brand}
+      subtitle={subtitle}
+      homeHref={homeHref}
+      nav={nav}
+      locale={locale}
+      user={{ email: user?.email ?? "", role }}
+      searchHref={searchHref}
+      settingsHref={settingsHref}
+      billingHref={billingHref}
+      notifications={notifications}
+      initialCollapsed={collapsed}
+      banner={banner}
+      labels={{
+        appName: t.app.name, notifications: t.nav.notifications, noNotifications: t.nav.noNotifications, markAllRead: t.nav.markAllRead,
+        collapse: t.nav.collapse, expand: t.nav.expand, openMenu: t.nav.openMenu, closeMenu: t.nav.closeMenu, profile: t.nav.profile,
+        logout: t.common.logout, search: t.nav.searchStudents, settings: t.nav.settings, billing: t.nav.billing,
+      }}
+    >
+      {children}
+    </AppShell>
   );
 }

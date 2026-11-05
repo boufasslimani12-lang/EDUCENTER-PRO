@@ -11,7 +11,7 @@ export default async function DocumentPage({ params }: Props<{ kind: string; id:
   const { t, locale } = await getT();
   if (kind !== "invoice" && kind !== "receipt") notFound();
 
-  let inst: any, payment: any = null;
+  let payment: any = null;
   if (kind === "receipt") {
     const { data } = await supabase.from("payments").select("*").eq("id", id).eq("tenant_id", tenant.id).maybeSingle();
     if (!data) notFound();
@@ -21,7 +21,7 @@ export default async function DocumentPage({ params }: Props<{ kind: string; id:
     .select("*, students(first_name, last_name, code, guardian_name, address)")
     .eq("id", kind === "receipt" ? payment.installment_id : id).eq("tenant_id", tenant.id).maybeSingle();
   if (!i) notFound();
-  inst = i;
+  const inst: any = i;
   const { data: lines } = await supabase.from("installment_lines").select("label, amount").eq("installment_id", inst.id);
   const title = kind === "invoice" ? t.payments.invoice : t.payments.receipt;
   const number = kind === "invoice" ? inst.invoice_no : payment.receipt_no;

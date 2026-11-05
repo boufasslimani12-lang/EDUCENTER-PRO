@@ -27,7 +27,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     const { data } = await supabase.from("students").select("code, last_name, first_name, birth_date, gender, phone, email, guardian_name, guardian_phone, archived_at, enrollments(status, classes(name), academic_years(name))").eq("tenant_id", tenant.id).order("last_name");
     rows = (data ?? []).map((s: any) => {
       const e = (s.enrollments ?? []).find((x: any) => x.status === "active");
-      const { enrollments, ...rest } = s;
+      const rest = { ...s };
+      delete rest.enrollments;
       return { ...rest, academic_year: e?.academic_years?.name ?? "", class: e?.classes?.name ?? "" };
     });
   } else if (kind === "installments") {
