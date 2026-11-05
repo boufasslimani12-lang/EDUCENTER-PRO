@@ -66,3 +66,12 @@ export async function removeAssignment(slug: string, teacherId: string, id: stri
   const { error } = await supabase.from("teacher_assignments").delete().eq("id", id);
   return finish(safeBack(slug, fd ? str(fd, "back") : null) ?? teacherPath(slug, teacherId, "assignments"), error);
 }
+
+/** Assign a teacher (chosen in the form) to a fixed class or group, from that class/group page. */
+export async function assignToTarget(slug: string, target: string, back: string, fd: FormData) {
+  const teacherId = str(fd, "teacher_id");
+  if (!teacherId || !/^[cg]:[0-9a-f-]{36}$/.test(target)) return finish(safeBack(slug, back) ?? `/t/${slug}/teachers`, { code: "23514" });
+  fd.set("target", target);
+  fd.set("back", back);
+  return addAssignment(slug, teacherId, fd);
+}
