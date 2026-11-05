@@ -44,7 +44,9 @@ export default async function StudentPage({ params, searchParams }: Props<{ id: 
   const attRows = (att.data ?? []) as any[];
   const gradeRows = (grades.data ?? []) as any[];
   const balanceDue = installments.reduce((sum, i) => sum + Math.max(0, Number(i.balance)), 0);
-  const attRate = attRows.length ? (attRows.filter((a) => a.status !== "absent").length / attRows.length) * 100 : null;
+  // Same definition as the attendance module: present + late over non-excused records.
+  const counted = attRows.filter((a) => a.status !== "excused");
+  const attRate = counted.length ? (counted.filter((a) => a.status === "present" || a.status === "late").length / counted.length) * 100 : null;
   const name = `${s.last_name} ${s.first_name}`;
   const groupNames = (current?.student_groups ?? []).map((g: any) => g.groups?.name).filter(Boolean) as string[];
 

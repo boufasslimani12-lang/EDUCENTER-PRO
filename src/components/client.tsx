@@ -137,3 +137,18 @@ export function Toast({ message, dismissLabel }: { message: string; dismissLabel
     </div>
   );
 }
+
+/** Sets every "present" radio in the surrounding form (attendance sheet shortcut). */
+export function MarkAllPresent({ label }: { label: string }) {
+  return (
+    <button
+      type="button"
+      className={buttonClass("secondary", true)}
+      onClick={(e) => {
+        e.currentTarget.closest("form")?.querySelectorAll<HTMLInputElement>('input[type="radio"][value="present"]').forEach((r) => { r.checked = true; });
+      }}
+    >
+      <Icon name="check" className="h-3.5 w-3.5" />{label}
+    </button>
+  );
+}

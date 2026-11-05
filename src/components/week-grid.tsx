@@ -1,9 +1,10 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { cx } from "./styles";
 
 export type Session = {
   id: string; weekday: number; starts_at: string; ends_at: string;
-  title: string; subtitle?: string; meta?: string; room?: string | null; colorKey: string; actions?: ReactNode;
+  title: string; subtitle?: string; meta?: string; room?: string | null; colorKey: string; actions?: ReactNode; href?: string;
 };
 
 /** Soft, distinguishable session colours; a subject always gets the same one. */
@@ -34,6 +35,9 @@ export function WeekGrid({ sessions, days, dayNames, minutesLabel, emptyDay, onl
   const byDay = (d: number) => sessions.filter((s) => s.weekday === d).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
   const label = (s: Session) => `${s.starts_at.slice(0, 5)}–${s.ends_at.slice(0, 5)}`;
 
+  if (onlyDay && byDay(onlyDay).length === 0) {
+    return <p className="rounded-xl border border-dashed border-slate-200 px-4 py-10 text-center text-sm text-slate-500">{emptyDay}</p>;
+  }
   return (
     <>
       <div className="hidden lg:block" dir="ltr">
@@ -48,10 +52,13 @@ export function WeekGrid({ sessions, days, dayNames, minutesLabel, emptyDay, onl
           {shown.map((d) => (
             <div key={d} className="relative border-s border-slate-100" style={{ height: (to - from) * PX }}>
               {hours.map((h) => <div key={h} className="absolute inset-x-0 border-t border-slate-100" style={{ top: (h - from) * PX }} />)}
-              {byDay(d).map((s) => (
-                <div
+              {byDay(d).map((s) => {
+                const Box = (s.href ? Link : "div") as any;
+                return (
+                <Box
                   key={s.id}
-                  className={cx("group absolute inset-x-1 overflow-hidden rounded-lg border-s-[3px] px-2 py-1 text-[11px] leading-tight shadow-sm", colorFor(s.colorKey))}
+                  {...(s.href ? { href: s.href, scroll: false } : {})}
+                  className={cx("group absolute inset-x-1 overflow-hidden rounded-lg border-s-[3px] px-2 py-1 text-[11px] leading-tight shadow-sm", s.href && "transition hover:shadow-md hover:ring-2 hover:ring-brand-500/30", colorFor(s.colorKey))}
                   style={{ top: (mins(s.starts_at) - from) * PX + 1, height: Math.max(durationMin(s) * PX - 2, 22) }}
                   title={`${label(s)} · ${s.title}${s.subtitle ? " · " + s.subtitle : ""}${s.room ? " · " + s.room : ""}`}
                   dir="auto"
@@ -61,8 +68,9 @@ export function WeekGrid({ sessions, days, dayNames, minutesLabel, emptyDay, onl
                   {s.subtitle && <div className="truncate opacity-80">{s.subtitle}</div>}
                   {(s.meta || s.room) && <div className="truncate opacity-70">{[s.meta, s.room].filter(Boolean).join(" · ")}</div>}
                   {s.actions && <div className="absolute end-1 top-1 hidden gap-1 group-focus-within:flex group-hover:flex">{s.actions}</div>}
-                </div>
-              ))}
+                </Box>
+                );
+              })}
             </div>
           ))}
         </div>
@@ -74,7 +82,8 @@ export function WeekGrid({ sessions, days, dayNames, minutesLabel, emptyDay, onl
             {byDay(d).length ? (
               <ul className="space-y-2">
                 {byDay(d).map((s) => (
-                  <li key={s.id} className={cx("flex items-start gap-3 rounded-xl border-s-[3px] px-3 py-2.5", colorFor(s.colorKey))}>
+                  <li key={s.id} className={cx("relative flex items-start gap-3 rounded-xl border-s-[3px] px-3 py-2.5", colorFor(s.colorKey))}>
+                    {s.href && <Link href={s.href} scroll={false} className="absolute inset-0 rounded-xl" aria-label={`${s.title} ${s.starts_at.slice(0, 5)}`} />}
                     <div className="w-[4.5rem] shrink-0 text-xs font-semibold tabular-nums" dir="ltr">{s.starts_at.slice(0, 5)}<div className="font-normal opacity-70">{durationMin(s)} {minutesLabel}</div></div>
                     <div className="min-w-0 flex-1 text-sm">
                       <div className="truncate font-medium">{s.title}</div>
