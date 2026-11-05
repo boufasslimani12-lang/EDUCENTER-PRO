@@ -1,6 +1,8 @@
 export const fr = {
   app: { name: "EDUCENTER PRO", tagline: "La gestion de votre établissement, centralisée." },
   common: {
+    reset: "Réinitialiser", results: "résultat(s)", showing: "Affichage", close: "Fermer", moreActions: "Plus d'actions",
+    requiredHint: "Les champs marqués * sont obligatoires.", dismiss: "Masquer",
     save: "Enregistrer", cancel: "Annuler", create: "Créer", add: "Ajouter", edit: "Modifier", delete: "Supprimer",
     archive: "Archiver", restore: "Restaurer", search: "Rechercher", filter: "Filtrer", actions: "Actions",
     name: "Nom", email: "E-mail", phone: "Téléphone", address: "Adresse", city: "Ville", date: "Date",
@@ -64,6 +66,15 @@ export const fr = {
     suspendedTitle: "Accès suspendu", suspendedBody: "Votre abonnement a expiré. Vos données sont conservées. Renouvelez pour réactiver l'accès.",
   },
   students: {
+    searchPlaceholder: "Nom, matricule ou téléphone…", allClasses: "Toutes les classes", tabOverview: "Aperçu", tabEnrollment: "Inscription",
+    tabFinance: "Paiements", tabAcademic: "Présences & notes", identity: "Identité", contactInfo: "Coordonnées",
+    identityHint: "Nom, date de naissance et matricule interne.", contactHint: "Moyens de contact de l'élève.",
+    guardianHint: "Personne à contacter pour l'élève.", enrollHint: "Classe, groupes et frais pour l'année active.",
+    noStudents: "Aucun élève pour le moment.", noResults: "Aucun élève ne correspond à ces filtres.",
+    archiveConfirm: "Archiver cet élève ? Son historique est conservé et il peut être restauré.", restoreConfirm: "Restaurer cet élève ?",
+    withdrawConfirm: "Retirer cette inscription ? L'historique est conservé.", balanceDue: "Solde dû", docsStatus: "Dossier",
+    currentEnrollment: "Inscription en cours", since: "depuis", noHistory: "Aucun historique.", saveProfile: "Enregistrer la fiche",
+    withdraw: "Retirer", viewPayments: "Voir les paiements",
     title: "Élèves", new: "Nouvel élève", firstName: "Prénom", lastName: "Nom", birthDate: "Date de naissance",
     gender: "Sexe", male: "Masculin", female: "Féminin", code: "Matricule", guardian: "Parent / tuteur",
     guardianName: "Nom du parent/tuteur", guardianPhone: "Téléphone du parent", guardianRelation: "Lien de parenté",
@@ -99,6 +110,13 @@ export const fr = {
     observation: "Observation", average: "Moyenne", enter: "Saisir les notes",
   },
   payments: {
+    prevMonth: "Mois précédent", nextMonth: "Mois suivant", statusFilter: "Statut", allStatuses: "Toutes les échéances",
+    collectFor: "Encaisser un paiement", editDiscount: "Modifier la remise", discountLocked: "La remise ne peut plus être modifiée après un paiement.",
+    voidTitle: "Annuler / corriger le paiement", voidHelp: "Le paiement est annulé (jamais supprimé) et une écriture inverse est ajoutée à la caisse.",
+    generateHelp: "Crée les échéances du mois pour toutes les inscriptions actives. Les échéances existantes ne sont pas dupliquées.",
+    noInstallments: "Aucune échéance pour cette période.", noInstallmentsHint: "Générez les échéances du mois pour commencer.",
+    noRecent: "Aucun paiement enregistré.", recoveryRate: "Taux de recouvrement", forStudent: "Élève sélectionné", maxAmount: "Maximum",
+    paymentDetails: "Détails du paiement",
     title: "Paiements élèves", generate: "Générer les échéances du mois", generated: "échéance(s) générée(s).",
     due: "Montant dû", paid: "Payé", balance: "Reste", record: "Encaisser", recordPayment: "Enregistrer un paiement",
     receipt: "Reçu", invoice: "Facture", void: "Annuler / corriger", voidReason: "Motif de la correction",

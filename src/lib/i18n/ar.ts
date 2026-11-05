@@ -3,6 +3,8 @@ import type { Dictionary } from "./fr";
 export const ar: Dictionary = {
   app: { name: "EDUCENTER PRO", tagline: "تسيير مؤسستك التعليمية في منصة واحدة." },
   common: {
+    reset: "إعادة التعيين", results: "نتيجة", showing: "عرض", close: "إغلاق", moreActions: "إجراءات أخرى",
+    requiredHint: "الحقول المميزة بـ * إلزامية.", dismiss: "إخفاء",
     save: "حفظ", cancel: "إلغاء", create: "إنشاء", add: "إضافة", edit: "تعديل", delete: "حذف",
     archive: "أرشفة", restore: "استرجاع", search: "بحث", filter: "تصفية", actions: "إجراءات",
     name: "الاسم", email: "البريد الإلكتروني", phone: "الهاتف", address: "العنوان", city: "المدينة", date: "التاريخ",
@@ -66,6 +68,15 @@ export const ar: Dictionary = {
     suspendedTitle: "الولوج موقوف", suspendedBody: "انتهى اشتراكك. بياناتك محفوظة. جدّد الاشتراك لإعادة التفعيل.",
   },
   students: {
+    searchPlaceholder: "الاسم أو رقم التسجيل أو الهاتف…", allClasses: "كل الأقسام", tabOverview: "نظرة عامة", tabEnrollment: "التسجيل",
+    tabFinance: "الأداءات", tabAcademic: "الحضور والنقط", identity: "الهوية", contactInfo: "معلومات الاتصال",
+    identityHint: "الاسم وتاريخ الازدياد ورقم التسجيل الداخلي.", contactHint: "وسائل الاتصال بالتلميذ.",
+    guardianHint: "الشخص الذي يُتصل به بشأن التلميذ.", enrollHint: "القسم والمجموعات والواجبات للسنة النشطة.",
+    noStudents: "لا يوجد تلاميذ بعد.", noResults: "لا يوجد تلميذ يطابق هذه المعايير.",
+    archiveConfirm: "أرشفة هذا التلميذ؟ يتم الاحتفاظ بسجله ويمكن استرجاعه.", restoreConfirm: "استرجاع هذا التلميذ؟",
+    withdrawConfirm: "سحب هذا التسجيل؟ يتم الاحتفاظ بالسجل.", balanceDue: "المبلغ المستحق", docsStatus: "الملف",
+    currentEnrollment: "التسجيل الحالي", since: "منذ", noHistory: "لا يوجد سجل.", saveProfile: "حفظ البطاقة",
+    withdraw: "سحب", viewPayments: "عرض الأداءات",
     title: "التلاميذ", new: "تلميذ جديد", firstName: "الاسم الشخصي", lastName: "الاسم العائلي", birthDate: "تاريخ الازدياد",
     gender: "الجنس", male: "ذكر", female: "أنثى", code: "رقم التسجيل", guardian: "ولي الأمر",
     guardianName: "اسم ولي الأمر", guardianPhone: "هاتف ولي الأمر", guardianRelation: "صلة القرابة",
@@ -101,6 +112,13 @@ export const ar: Dictionary = {
     observation: "ملاحظة", average: "المعدل", enter: "إدخال النقط",
   },
   payments: {
+    prevMonth: "الشهر السابق", nextMonth: "الشهر التالي", statusFilter: "الحالة", allStatuses: "كل الأقساط",
+    collectFor: "تسجيل أداء", editDiscount: "تعديل التخفيض", discountLocked: "لا يمكن تعديل التخفيض بعد تسجيل أداء.",
+    voidTitle: "إلغاء / تصحيح الأداء", voidHelp: "يُلغى الأداء (ولا يُحذف أبدًا) وتُضاف حركة عكسية إلى الصندوق.",
+    generateHelp: "ينشئ أقساط الشهر لجميع التسجيلات النشطة. لا تتكرر الأقساط الموجودة.",
+    noInstallments: "لا توجد أقساط لهذه الفترة.", noInstallmentsHint: "أنشئ أقساط الشهر للبدء.",
+    noRecent: "لا توجد أداءات مسجلة.", recoveryRate: "نسبة التحصيل", forStudent: "التلميذ المحدد", maxAmount: "الحد الأقصى",
+    paymentDetails: "تفاصيل الأداء",
     title: "أداءات التلاميذ", generate: "إنشاء أقساط الشهر", generated: "قسط(أقساط) تم إنشاؤها.",
     due: "المبلغ المستحق", paid: "المؤدى", balance: "الباقي", record: "تحصيل", recordPayment: "تسجيل أداء",
     receipt: "وصل", invoice: "فاتورة", void: "إلغاء / تصحيح", voidReason: "سبب التصحيح",

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Icon, type IconName } from "./icons";
-import type { ReactNode, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import { cx, buttonClass, type ButtonVariant } from "./styles";
+import { Toast } from "./client";
 
-export function cx(...c: (string | false | null | undefined)[]) {
-  return c.filter(Boolean).join(" ");
-}
+export { cx, buttonClass };
+import { Suspense, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
+
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
@@ -131,10 +132,10 @@ export function Td({ children, className, dir }: { children?: ReactNode; classNa
 const inputCls =
   "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/15 invalid:[&:not(:placeholder-shown)]:border-rose-400 disabled:bg-slate-50";
 
-export function Field({ label, children, hint, className }: { label: string; children: ReactNode; hint?: string; className?: string }) {
+export function Field({ label, children, hint, className, required }: { label: string; children: ReactNode; hint?: string; className?: string; required?: boolean }) {
   return (
     <label className={cx("block", className)}>
-      <span className="mb-1 block text-sm font-medium text-slate-700">{label}</span>
+      <span className="mb-1.5 block text-[13px] font-medium text-slate-700">{label}{required && <span className="ms-0.5 text-rose-600" aria-hidden="true">*</span>}</span>
       {children}
       {hint && <span className="mt-1 block text-xs text-slate-500">{hint}</span>}
     </label>
@@ -151,36 +152,83 @@ export function Textarea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea rows={3} {...props} className={cx(inputCls, props.className)} />;
 }
 
-const btn = {
-  primary: "bg-brand-600 text-white hover:bg-brand-700 shadow-sm",
-  secondary: "bg-white text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50",
-  danger: "bg-rose-600 text-white hover:bg-rose-700",
-  ghost: "text-slate-600 hover:bg-slate-100",
-  soft: "bg-brand-50 text-brand-700 hover:bg-brand-100",
-};
-export const buttonClass = (v: keyof typeof btn = "primary", small = false) =>
-  cx("inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition disabled:opacity-50", small ? "px-2.5 py-1 text-xs" : "px-4 py-2 text-sm", btn[v]);
-
-export function ButtonLink({ href, children, variant = "primary", small, icon }: { href: string; children: ReactNode; variant?: keyof typeof btn; small?: boolean; icon?: IconName }) {
+export function ButtonLink({ href, children, variant = "primary", small, icon }: { href: string; children: ReactNode; variant?: ButtonVariant; small?: boolean; icon?: IconName }) {
   if (icon) children = <><Icon name={icon} className="h-4 w-4" />{children}</>;
   if (href.includes("/export/")) return <a href={href} className={buttonClass(variant, small)}>{children}</a>;
   return <Link href={href} className={buttonClass(variant, small)}>{children}</Link>;
 }
 
-export function Flash({ sp }: { sp: { ok?: string; error?: string } }) {
+/** Feedback from server actions: errors stay inline (persistent), successes show as a toast. */
+export function Flash({ sp, dismissLabel = "×" }: { sp: { ok?: string; error?: string }; dismissLabel?: string }) {
   if (sp.error)
     return (
       <div role="alert" className="mb-5 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
         <Icon name="alert" className="mt-0.5 h-4 w-4 shrink-0" /><span>{sp.error}</span>
       </div>
     );
-  if (sp.ok)
-    return (
-      <div role="status" className="mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-        <Icon name="check" className="mt-0.5 h-4 w-4 shrink-0" /><span>{sp.ok}</span>
-      </div>
-    );
+  if (sp.ok) return <Suspense><Toast message={sp.ok} dismissLabel={dismissLabel} /></Suspense>;
   return null;
+}
+
+/** A titled block of form fields with a short explanation on the side (stacked on mobile). */
+export function FormSection({ title, description, children, className }: { title: string; description?: string; children: ReactNode; className?: string }) {
+  return (
+    <div className={cx("grid grid-cols-1 gap-x-8 gap-y-4 border-t border-slate-100 py-6 first:border-t-0 first:pt-0 last:pb-0 lg:grid-cols-[14rem_1fr]", className)}>
+      <div>
+        <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+        {description && <p className="mt-1 text-xs leading-relaxed text-slate-500">{description}</p>}
+      </div>
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
+export function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" | "lg" }) {
+  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+  const sizes = { sm: "h-8 w-8 text-[11px]", md: "h-10 w-10 text-xs", lg: "h-14 w-14 text-base" };
+  return <span className={cx("grid shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-100 to-cyan-100 font-semibold text-brand-700", sizes[size])} aria-hidden="true">{initials}</span>;
+}
+
+/** Link-based tabs (state lives in the URL so it survives reloads and server actions). */
+export function Tabs({ tabs, current }: { tabs: { key: string; label: string; href: string; count?: number }[]; current: string }) {
+  return (
+    <nav className="-mb-px flex gap-1 overflow-x-auto border-b border-slate-200" aria-label="Tabs">
+      {tabs.map((tb) => {
+        const active = tb.key === current;
+        return (
+          <Link
+            key={tb.key}
+            href={tb.href}
+            scroll={false}
+            aria-current={active ? "page" : undefined}
+            className={cx("whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition", active ? "border-brand-600 text-brand-700" : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800")}
+          >
+            {tb.label}
+            {tb.count !== undefined && <span className={cx("ms-1.5 rounded-full px-1.5 py-0.5 text-[11px]", active ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-500")}>{tb.count}</span>}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export function SearchField({ name = "q", defaultValue, placeholder, label }: { name?: string; defaultValue?: string; placeholder: string; label: string }) {
+  return (
+    <div className="relative">
+      <Icon name="search" className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <input type="search" name={name} defaultValue={defaultValue} placeholder={placeholder} aria-label={label} className={cx(inputCls, "h-10 ps-9")} />
+    </div>
+  );
+}
+
+/** Small label/value pair for detail views. */
+export function InfoItem({ label, children, dir }: { label: string; children: ReactNode; dir?: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-xs text-slate-500">{label}</dt>
+      <dd className="mt-0.5 truncate text-sm text-slate-900" dir={dir}>{children || "—"}</dd>
+    </div>
+  );
 }
 
 export function Grid({ children, cols = 2 }: { children: ReactNode; cols?: 2 | 3 | 4 }) {
@@ -188,14 +236,60 @@ export function Grid({ children, cols = 2 }: { children: ReactNode; cols?: 2 | 3
   return <div className={cx("grid grid-cols-1 gap-4", c)}>{children}</div>;
 }
 
-export function Pagination({ page, pages, hrefFor, t }: { page: number; pages: number; hrefFor: (p: number) => string; t: { previous: string; next: string; page: string; of: string } }) {
-  if (pages <= 1) return null;
+export function Pagination({ page, pages, hrefFor, t, total, pageSize }: {
+  page: number; pages: number; hrefFor: (p: number) => string; total?: number; pageSize?: number;
+  t: { previous: string; next: string; page: string; of: string; showing?: string; results?: string };
+}) {
+  if (pages <= 1 && total === undefined) return null;
+  const nums = Array.from(new Set([1, page - 1, page, page + 1, pages])).filter((n) => n >= 1 && n <= pages).sort((a, b) => a - b);
+  const from = total ? (page - 1) * (pageSize ?? 0) + 1 : 0;
+  const to = total ? Math.min(total, page * (pageSize ?? 0)) : 0;
+  const pageBtn = "grid h-8 min-w-8 place-items-center rounded-lg px-2 text-sm";
   return (
-    <div className="mt-4 flex items-center justify-between text-sm">
-      <span className="text-slate-500">{t.page} {page} {t.of} {pages}</span>
-      <div className="flex gap-2">
-        {page > 1 && <ButtonLink variant="secondary" small href={hrefFor(page - 1)}>{t.previous}</ButtonLink>}
-        {page < pages && <ButtonLink variant="secondary" small href={hrefFor(page + 1)}>{t.next}</ButtonLink>}
+    <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 text-sm sm:flex-row">
+      <span className="text-slate-500">
+        {total !== undefined && pageSize ? <>{t.showing} <b className="font-medium text-slate-700">{total ? `${from}–${to}` : 0}</b> {t.of} <b className="font-medium text-slate-700">{total}</b> {t.results}</> : <>{t.page} {page} {t.of} {pages}</>}
+      </span>
+      {pages > 1 && (
+        <nav className="flex items-center gap-1" aria-label="Pagination">
+          {page > 1 ? <Link href={hrefFor(page - 1)} className={cx(pageBtn, "text-slate-600 hover:bg-slate-100")} aria-label={t.previous}><Icon name="chevronLeft" className="h-4 w-4 rtl:rotate-180" /></Link> : <span className={cx(pageBtn, "text-slate-300")}><Icon name="chevronLeft" className="h-4 w-4 rtl:rotate-180" /></span>}
+          {nums.map((n, k) => (
+            <span key={n} className="flex items-center">
+              {k > 0 && n - nums[k - 1] > 1 && <span className="px-1 text-slate-400">…</span>}
+              <Link href={hrefFor(n)} aria-current={n === page ? "page" : undefined} className={cx(pageBtn, n === page ? "bg-brand-600 font-medium text-white" : "text-slate-600 hover:bg-slate-100")}>{n}</Link>
+            </span>
+          ))}
+          {page < pages ? <Link href={hrefFor(page + 1)} className={cx(pageBtn, "text-slate-600 hover:bg-slate-100")} aria-label={t.next}><Icon name="chevronRight" className="h-4 w-4 rtl:rotate-180" /></Link> : <span className={cx(pageBtn, "text-slate-300")}><Icon name="chevronRight" className="h-4 w-4 rtl:rotate-180" /></span>}
+        </nav>
+      )}
+    </div>
+  );
+}
+
+/** Skeleton for list pages: header, toolbar and table rows. */
+export function ListSkeleton({ rows = 8, kpis = 0 }: { rows?: number; kpis?: number }) {
+  return (
+    <div className="space-y-6" aria-busy="true" aria-live="polite">
+      <div className="flex items-end justify-between gap-4">
+        <div className="space-y-2"><Skeleton className="h-7 w-44" /><Skeleton className="h-4 w-24" /></div>
+        <Skeleton className="h-9 w-36" />
+      </div>
+      {kpis > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: kpis }, (_, i) => <Skeleton key={i} className="h-[88px] rounded-2xl" />)}
+        </div>
+      )}
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
+        <div className="flex gap-3 border-b border-slate-100 p-4"><Skeleton className="h-10 flex-1" /><Skeleton className="h-10 w-40" /></div>
+        <div className="divide-y divide-slate-100">
+          {Array.from({ length: rows }, (_, i) => (
+            <div key={i} className="flex items-center gap-3 px-5 py-3.5">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="flex-1 space-y-1.5"><Skeleton className="h-3.5 w-48" /><Skeleton className="h-3 w-24" /></div>
+              <Skeleton className="hidden h-3.5 w-20 sm:block" /><Skeleton className="h-5 w-16 rounded-full" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

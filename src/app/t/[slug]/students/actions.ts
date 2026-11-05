@@ -1,7 +1,14 @@
 "use server";
-import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/session";
 import { finish, num, str } from "@/lib/actions";
+
+const TABS = new Set(["overview", "enrollment", "finance", "academic"]);
+
+/** Return to the profile tab the form was submitted from. */
+function studentPath(slug: string, id: string, fd: FormData) {
+  const tab = str(fd, "tab");
+  return `/t/${slug}/students/${id}${tab && TABS.has(tab) && tab !== "overview" ? `?tab=${tab}` : ""}`;
+}
 
 function studentFields(fd: FormData) {
   return {
@@ -39,7 +46,7 @@ export async function createStudent(slug: string, fd: FormData) {
 export async function updateStudent(slug: string, id: string, fd: FormData) {
   const { supabase } = await requireAdmin(slug);
   const { error } = await supabase.from("students").update(studentFields(fd)).eq("id", id);
-  return finish(`/t/${slug}/students/${id}`, error);
+  return finish(studentPath(slug, id, fd), error);
 }
 
 export async function setArchived(slug: string, id: string, archived: boolean) {
@@ -55,13 +62,13 @@ export async function enroll(slug: string, id: string, fd: FormData) {
     p_student: id, p_year: str(fd, "academic_year_id"), p_class: str(fd, "class_id"),
     p_fee: num(fd, "monthly_fee") ?? 0, p_discount: num(fd, "monthly_discount") ?? 0, p_groups: groups,
   });
-  return finish(`/t/${slug}/students/${id}`, error);
+  return finish(studentPath(slug, id, fd), error);
 }
 
 export async function withdraw(slug: string, enrollmentId: string, studentId: string) {
   const { supabase } = await requireAdmin(slug);
   const { error } = await supabase.from("enrollments").update({ status: "withdrawn" }).eq("id", enrollmentId);
-  return finish(`/t/${slug}/students/${studentId}`, error);
+  return finish(`/t/${slug}/students/${studentId}?tab=enrollment`, error);
 }
 
 export async function saveDocuments(slug: string, id: string, fd: FormData) {
@@ -73,11 +80,5 @@ export async function saveDocuments(slug: string, id: string, fd: FormData) {
     received_on: received.has(r) ? new Date().toISOString().slice(0, 10) : null,
   }));
   const { error } = await supabase.from("student_documents").upsert(rows, { onConflict: "student_id,requirement_id" });
-  return finish(`/t/${slug}/students/${id}`, error);
-}
-
-export async function search(slug: string, fd: FormData) {
-  const q = new URLSearchParams();
-  for (const k of ["q", "class", "archived"]) { const v = str(fd, k); if (v) q.set(k, v); }
-  redirect(`/t/${slug}/students?${q}`);
+  return finish(studentPath(slug, id, fd), error);
 }
