@@ -265,32 +265,3 @@ export function Pagination({ page, pages, hrefFor, t, total, pageSize }: {
     </div>
   );
 }
-
-/** Skeleton for list pages: header, toolbar and table rows. */
-export function ListSkeleton({ rows = 8, kpis = 0 }: { rows?: number; kpis?: number }) {
-  return (
-    <div className="space-y-6" aria-busy="true" aria-live="polite">
-      <div className="flex items-end justify-between gap-4">
-        <div className="space-y-2"><Skeleton className="h-7 w-44" /><Skeleton className="h-4 w-24" /></div>
-        <Skeleton className="h-9 w-36" />
-      </div>
-      {kpis > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: kpis }, (_, i) => <Skeleton key={i} className="h-[88px] rounded-2xl" />)}
-        </div>
-      )}
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card">
-        <div className="flex gap-3 border-b border-slate-100 p-4"><Skeleton className="h-10 flex-1" /><Skeleton className="h-10 w-40" /></div>
-        <div className="divide-y divide-slate-100">
-          {Array.from({ length: rows }, (_, i) => (
-            <div key={i} className="flex items-center gap-3 px-5 py-3.5">
-              <Skeleton className="h-8 w-8 rounded-full" />
-              <div className="flex-1 space-y-1.5"><Skeleton className="h-3.5 w-48" /><Skeleton className="h-3 w-24" /></div>
-              <Skeleton className="hidden h-3.5 w-20 sm:block" /><Skeleton className="h-5 w-16 rounded-full" />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}

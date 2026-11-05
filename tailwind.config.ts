@@ -28,6 +28,7 @@ export default {
         pop: "0 10px 30px -10px rgba(16,24,40,.25), 0 4px 10px -4px rgba(16,24,40,.08)",
       },
       borderRadius: { xl: "0.875rem", "2xl": "1.125rem" },
+      keyframes: { navbar: { "0%": { transform: "translateX(-100%)" }, "100%": { transform: "translateX(300%)" } } },
     },
   },
   plugins: [],

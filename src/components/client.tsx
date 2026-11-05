@@ -1,7 +1,6 @@
 "use client";
 import { useFormStatus } from "react-dom";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { buttonClass, cx } from "./styles";
 import { Icon, type IconName } from "./icons";
 
@@ -119,17 +118,16 @@ export const menuItemClass = "flex w-full items-center gap-2.5 rounded-lg px-2.5
 /** Success toast for `?ok=` messages: auto-hides and removes the parameter from the URL. */
 export function Toast({ message, dismissLabel }: { message: string; dismissLabel: string }) {
   const [show, setShow] = useState(true);
-  const router = useRouter();
-  const path = usePathname();
-  const sp = useSearchParams();
   useEffect(() => {
     const timer = setTimeout(() => setShow(false), 4500);
-    const q = new URLSearchParams(sp.toString());
-    q.delete("ok");
-    router.replace(q.size ? `${path}?${q}` : path, { scroll: false });
+    // Drop ?ok= from the address bar without a navigation, so the server-rendered toast stays mounted.
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("ok")) {
+      url.searchParams.delete("ok");
+      window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    }
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [message]);
   if (!show) return null;
   return (
     <div role="status" aria-live="polite" className="fixed bottom-4 end-4 z-50 flex max-w-sm items-start gap-3 rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-pop">

@@ -102,7 +102,34 @@ export function AppShell(p: Props) {
   const userRef = useDismiss(menu === "user", close);
   const unread = p.notifications.filter((n) => !n.read_at).length;
 
-  useEffect(() => { setDrawer(false); setMenu(null); }, [path]);
+  // Navigation progress (replaces route-level loading.tsx, which breaks same-page server-action redirects).
+  const [navigating, setNavigating] = useState(false);
+  useEffect(() => { setDrawer(false); setMenu(null); setNavigating(false); }, [path]);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = (e.target as HTMLElement).closest("a");
+      if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
+      const url = new URL(a.href, window.location.href);
+      if (url.origin !== window.location.origin || url.pathname.includes("/export/")) return;
+      if (url.pathname === window.location.pathname && url.search === window.location.search) return;
+      setNavigating(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setNavigating(false), 10000);
+    };
+    const onPop = () => setNavigating(false);
+    document.addEventListener("click", onClick);
+    window.addEventListener("popstate", onPop);
+    return () => { document.removeEventListener("click", onClick); window.removeEventListener("popstate", onPop); clearTimeout(timer); };
+  }, []);
+  // Query-only navigations (filters, tabs) keep the pathname: stop the bar once the URL settles.
+  useEffect(() => {
+    if (!navigating) return;
+    const start = window.location.href;
+    const id = setInterval(() => { if (window.location.href !== start) setNavigating(false); }, 150);
+    return () => clearInterval(id);
+  }, [navigating]);
   useEffect(() => {
     document.body.style.overflow = drawer ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -119,6 +146,11 @@ export function AppShell(p: Props) {
 
   return (
     <div className="min-h-screen bg-surface lg:flex">
+      {navigating && (
+        <div className="no-print fixed inset-x-0 top-0 z-[60] h-0.5 overflow-hidden bg-brand-100" role="progressbar" aria-label="Loading" aria-busy="true">
+          <div className="h-full w-1/3 animate-[navbar_1.1s_ease-in-out_infinite] bg-brand-600" />
+        </div>
+      )}
       {/* Desktop sidebar */}
       <aside className={cx("no-print sticky top-0 hidden h-screen shrink-0 flex-col bg-gradient-to-b from-navy-800 via-navy-900 to-navy-950 transition-[width] duration-200 lg:flex", collapsed ? "w-[76px]" : "w-64")}>
         <div className={cx("flex h-16 items-center border-b border-white/[0.06]", collapsed ? "justify-center px-2" : "px-5")}>
